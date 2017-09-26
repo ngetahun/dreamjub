@@ -1,0 +1,104 @@
+<link rel="import" href="../components/polymer/polymer.html">
+
+<link rel="import" href="../components/iron-form/iron-form.html">
+
+<link rel="import" href="../components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../components/paper-dialog-scrollable/paper-dialog
+-scrollable.html">
+<link rel="import" href="../components/paper-input/paper-input.html">
+<link rel="import" href="../components/gold-email-input/gold-email-input.html">
+<link rel="import" href="../components/paper-button/paper-button.html">
+
+<link rel="import" href="../components/polymer-cookie/polymer-cookie.html">
+
+<dom-module id="magic-login-form">
+    <template>
+      <polymer-cookie
+          id="csrfcookie"
+          name="csrftoken">
+      </polymer-cookie>
+
+      <paper-dialog id="result" modal>
+        <h2>Done</h2>
+        <paper-dialog-scrollable>
+          <p>If we can match your email to a user known to us, you have gotten mail.</p>
+        </paper-dialog-scrollable>
+      </paper-dialog>
+      <paper-dialog id="dialog" opened="opened" modal>
+        <h2>Login</h2>
+        <paper-dialog-scrollable>
+          <form is="iron-form" method="post" action="[[login_url]]" id="form">
+
+              <gold-email-input id="email" name="email" label="Jacobs email"
+                           autofocus></gold-email-input>
+
+              <input type="hidden"
+                     name="csrfmiddlewaretoken" value="[[csrf_token]]">
+
+              <input type="hidden"
+                     name="next" value="[[next]]"
+
+              <div class="buttons">
+                  <paper-button on-tap="submitForm">Go</paper-button>
+              </div>
+          </form>
+        </paper-dialog-scrollable>
+      </paper-dialog>
+    </template>
+
+    <script>
+        Polymer({
+             is: 'magic-login-form',
+            properties: {
+                login_url: {
+                    type: String,
+                    value: "/login/"
+                },
+                next: {
+                    type: String,
+                    value: "/"
+                },
+                opened: {
+                    type: Boolean,
+                    value: false
+                }
+            },
+            ready: function() {
+                var csrf = document.getElementById('csrfcookie').readCookie();
+                this.csrf_token = csrf;
+            },
+            listeners: {
+               'iron-form-response': 'formResponse',
+               'email.keydown': 'keyPress'
+            },
+            keyPress: function(event) {
+                // Submit form if enter key pressed
+                if(event.keyCode === 13)
+                    this.submitForm();
+            },
+            formResponse: function(event) {
+                var response = event.detail.response;
+
+                console.log(event);
+
+                // this.fire('login', response);
+
+                if(response.success) {
+                    document.getElementById('dialog').close();
+                    document.getElementById('result').open();
+                } else {
+                    var emailField = document.getElementById('email');
+
+                    emailField.value = "";
+                    emailField.errorMessage = response.detail;
+                    emailField.invalid = true;
+
+                    emailField.focus();
+                }
+            },
+            submitForm: function() {
+                document.getElementById('form').submit();
+            }
+        });
+    </script>
+</dom-module>
