@@ -6,6 +6,7 @@ from oauth2_provider import views as oauth_views
 
 urlpatterns = [
     url(r'^$', views.magic_login, name='login'),
+    url('r^legacy/', views.login, name='legacy-login'),
     url(r'^o/', include([
         url(r'^authorize/$', views.AuthorizationView.as_view(),
             name="authorize"),
